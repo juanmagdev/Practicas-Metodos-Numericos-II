@@ -69,7 +69,6 @@ def norma_mat(A, p):
 
 # Ejercicio 5 pracitca 3
 
-
 def aprox_norma_mat(A, p, nva):
     m, n = shape(A)
     norma = 0.
@@ -233,6 +232,7 @@ def gauss_pp(A, B):
     return exito, X
 
 
+#Si nos piden las matrices gaussA, gaussB (MA = triu(gaussA), MB = gaussB)
 def gauss_pp2(A, B):
     m, n = shape(A)
     p, q = shape(B)
@@ -296,6 +296,8 @@ def gaussjordan_pp(A, B):
     return True, X
 
 
+#Si nos piden las matrices gJA, gJB (MA = triu(gJA) - triu(gJA, k=1), MB = gJB
+# MA tabien se puede calcular como MA = diagflat(diag(gjA), gjB)
 def gaussjordan_pp2(A, B):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -437,6 +439,24 @@ def metodo_lu(A, B):
         return False, "metodo_lu: error en la factorización."
 
 
+def admite_cholesky(A):
+    m, n = shape(A)
+    if m != n:
+        return False, "NO ADMITE CHOLESKY: no es matriz cuadrada"
+    if max(abs(A-transpose(A))) > 1e-10 :
+        return False, "NO ADMITE CHOLESKY: no es simétrica"      
+    determinante = A[0,0]
+    i = 2
+    while i<=n and determinante > 0:
+        M = A[0:i,0:i]
+        determinante = det(M)
+        i += 1
+    if i == n+1:
+           return True, "ADMITE CHOLESKY"
+    else:
+           return False, "NO ADMITE CHOLESKY: no es definida positiva"
+
+
 #para obtener la matriz hacer tril(chol)
 def facto_cholesky(A):
     (m, n) = shape(A)
@@ -474,6 +494,13 @@ def metodo_cholesky(A, B):
 # y el numero maximo de iteraciones que dar
 
 
+# A = M - N = D - (E + F) = D - E -F => J = (D^-1)(E+F)
+# Sacar la J:  A = M - N = D - (E + F) = D - E -F => J = (D^-1)(E+F)
+# D = A - tril(A, -1) - triu(A, 1)
+# E = tril(-A, -1)
+# F = triu(-A, 1)
+# Dinv = inv(D)
+# J = Dinv@(E+F)
 def jacobi(A, B, XOLD, itermax, tol):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -585,7 +612,7 @@ def potencia(A, X, norma, itermax, tol):
             else:
                 lambdas[i] = 0.
         X = Y/normanew
-        # print('Iteración: k = ', k, 'Norma: ||A*X_k|| = ', normanew)
+        #   
         # print('Lambdas: lambdas_k = \n', lambdas)
         # print('Vectores: X_k = \n', X)
         normaold = normanew
@@ -707,280 +734,20 @@ def cond(A, p):
     elif p == inf:
         return norma_mat(AA, inf)*norma_mat(inv(AA), inf)
 
-# EXAMEN 2021
 
 
-        def trilpbanda(n, p):
-            A = 2*eye(n)
-            for i in range(p):
-                A = A - (i+1)*eye(n, k=-(i+1))
-            return A
-        # El bucle for i in range(p) va desde 0 hasta p-1, pero como necesitamos que vaya desde 1 a p, sumamos 1 a i en cada
-        # iteración
-
-# b) Considerar ```A= tripanda(5,3)```, y $B=(2, 1 , -1 , -4 ,-4)^t$. Resolver el sistema $AX=B$ usando el método del ```descenso```.
-
-        A = trilpbanda(5,3)
-        B = array([[2], [1], [-1], [-4], [-4]])
-        exito, X = descenso(A,B)
-        if exito:
-            print("A = ")
-            print(A)
-            print()
-            print("B = ")
-            print(B)
-            print()
-            print("La solución del sistema AX = B es: X")
-            print(X)
-
-
-## #### Ejercicio 2.
-## Consideremos la matriz 
-## $$A=\begin{pmatrix}
-##  9 & 1 & 1 & 5 \\
-##  1 & 10 & 1 & 9 \\
-## 1 & 1 & 10 & 1 \\
-## 5 & 9 & 1 & 10 
-## \end{pmatrix}$$
-
-        A = array([[9,1,1,5], [1,10,1,9], [1,1,10,1], [5,9,1,10]])
-        B = array([[16], [21], [13], [25]])
-
-        exito, chol = metodo_cholesky(A,B)
-        if exito:
-            print("La matriz acepta factorización de Cholesky y la solución de AX = B es: X = ")
-            print(chol)
-
-## b) Se considera el sistema perturbado $\bar{A}\bar{X}=B$, donde
-## 
-## $$\bar{X}=X+\delta X, \qquad \bar{A}=A+\Delta A, \quad \text{siendo} \quad \Delta{A}=\verb"random.rand(4,4)/100"$$
-## 
-## Verificar la desigualdad 
-## 
-## $$\frac{\|\Delta X\|_2}{\|X+\Delta X\|_2}\leq \text{cond}_2(A) \frac{\|\Delta A\|_2}{\|A\|_2}$$
-## calculando todas las cantidades que aparecen en la misma.
-
-        # La solución del sistema ya la hemos calculado en el apartado anterior, luego X = chol 
-        X = chol
-
-        deltaA = random.rand(4,4)/100
-        A_ = A + deltaA
-
-        exito, X_ = gauss_pp(A_,B)
-
-        deltaX = X_ - X
-
-        norma_deltaX = norma_vec(X, 2)
-        print("Norma 2 de deltaX: ",norma_deltaX)
-        norma_X_ = norma_vec(X_,2)
-        print("Norma 2 de X_: ",norma_X_)
-        norma_A = norma_mat(A,2)
-        print("Norma 2 de A: ",norma_A)
-        norma_invA = norma_vec(inv(A),2)
-        print("Norma 2 de inv(A): ",norma_invA)
-        norma_deltaA = norma_mat(deltaA,2)
-        print("Norma 2 deltaA: ",norma_deltaA)
-        print()
-
-        izquierda = norma_deltaX/norma_X_
-        print("El miembro izquierdo de la desigualdad es: ",izquierda)
-        derecha = norma_A*norma_invA*norma_deltaA/norma_A
-        print("El miembro derecho de la desigualdad es: ",derecha)
-        print("La desigualdad es: ",izquierda <= derecha)
-
-## #### Ejercicio 3
-## Calcular toda la información posible sobre los autovalores y autovectores de la matriz $A$, usando el método de la potencia y sus variantes. Usar como vector inicial el vector $X_0=(1,0,0,0)^t$. Justificar las conclusiones extraídas de la información obtenida.
-## 
-## $$A=\begin{pmatrix}
-##  2& 0 & 0 & 1  \\
-##  0 & 1 & 0 & 1\\
-## 0 & 0 & 3 & 1 \\
-## -1 & 0 & 0 &1
-## \end{pmatrix}$$
-
-        A = array([[2,0,0,1], [0,1,0,1], [0,0,3,1], [-1,0,0,1]])
-        X0 = array([[1], [0], [0], [0]])
-
-        print("--- Primer autovalor ---")
-        exito, normas, lambdas, X  = potencia(A, X0, inf, 200, 1e-8)
-        print()
-        print("\n Método de la potencia con norma inf.")
-        if exito:
-            print("Convergencias de las normas: \n" ,normas)
-            print("Convergencias de los cocientes: \n" ,lambdas)
-            print("Convergencias de los vectores: \n" ,X)
-        print()
-        print('''Aplicando el método de la potencia, deducimos que 3 es el autovalor de mayor módulo de A y su
-        autovector asociado es X = ''')
-        print(X)
-
-        print()
-        print("--- Segundo autovalor ---")
-        exito, normas, lambdas, X  = potenciainv(A, X0, inf, 200, 1e-8)
-        print()
-        print("\n Método de la potencia inversa con norma inf.")
-        if exito:
-            print("Convergencias de las normas: \n" ,normas)
-            print("Convergencias de los cocientes: \n" ,lambdas)
-            print("Convergencias de los vectores: \n" ,X)
-        print()
-        print('''Aplicando el método de la potencia inversa, deducimos que 1 es el autovalor de mayor módulo de inb(A),
-        luego 1 es el autovalor más pequeño y su autovector asociado es X = ''')
-        print(X)
-
-        print()
-        print("--- Tercer autovalor ---")
-        exito, normas, lambdas, X  = potenciadesinv(A, X0,1.25, inf, 200, 1e-8)
-        print()
-        print("\n Método de la potencia inversa desplazada con norma inf.")
-        if exito:
-            print("Convergencias de las normas: \n" ,normas)
-            print("Convergencias de los cocientes: \n" ,lambdas)
-            print("Convergencias de los vectores: \n" ,X)
-        print('''Aplicando el método de la potencia inversa desplaza 1.25, deducimos que 4 es el autovalor de mayor
-        módulo de inv(A - 1.25*Identidad)m luego 1/4 + 1.25 = 1.5 es autovalor de A y su autovector asociado es X = ''')
-        print(X)
-
-        print()
-        print("--- Cuarto autovalor ---")
-        print('''Nos queda por calcular un úultimo autovalor al que denotaremos h, como sabemos, la traza(A) es la suma
-        de los autovalores de A por tanto:
-        traza(A) = 3 + 1 + 1.5 + h
-        h = 7 - 5.5
-        h = 1.5
-
-        Por tanto, los autovalores de A son 1, 1.5, 1.5 y 3
-        ''')
-
-#######                                 EXAMEN 2017                                 #######
-# EXAMEN 2017
-# EJERCICIO 1
-print('EJERCICIO 1')
-A=array([[9,-12,9,-6,3],[15,-27,27,-18,9],[17,-34,45,-38,19],[15,-30,45,-51,33],[9,-18,27,-36,33]])
-B=array([[15],[21],[27],[21],[15]])
-exito, X, gaussA, gaussB=gauss_pp(A, B)
-
-print(triu(gaussA))
-print(gaussB)
-e,X1=remonte(triu(gaussA),gaussB)
-print(X1)
-
-# EJERCICIO 2
-print('EJERCICIO 2')
-X=gauss_pp(A, B)[1]
-print(X)
-
-# EJERICIO 3
-print('EJERCICIO 3')
-e,lu=facto_lu(A)
-L=tril(lu,-1)+eye(shape(A)[0])
-U=triu(lu)
-print(lu)
-print(L)
-print(U)
-
-# EJERCICIO 4
-print('EJERCICIO 4')
-BB=array([[16],[20],[28],[20],[16]])
-deltaB=BB-B
-X=solve(A,B)
-XX=solve(A,BB)
-deltaX=XX-X
-izq=norma_vec(deltaX, 1)/norma_vec(X,1)
-condA=norma_mat(A, 1)*norma_mat(inv(A), 1)
-der=condA*(norma_vec(deltaB, 1)/norma_vec(B,1))
-print(izq<=der)
-
-# EJERCICIO 5
-print('EJERCICIO 5')
-X0=array([[1],[0],[0],[0],[0]])
-print(eig(A)[0])
-print('---POTENCIA---')
-
-exito,normas,lambdas,X=potencia(A,X0,inf,200,1e-15)
-if exito:
-    print('Convergencia de las normas: \n', normas)
-    print('Convergencia de los cocientes: \n', lambdas)
-    print('Convergencia de los vectores: \n', X)
-else:
-    print(normas)
-print('Deducimos que 15 es autovalor')
-Z1=array([[0],[0],[0],[0.5],[1]])
-print('El autovector asociado es ', Z1)
-    
-print('---POTENCIA INVERSA---')
-
-exito,normas,lambdas,X=potenciainv(A,X0,inf,200,1e-15)
-if exito:
-    print('Convergencia de las normas: \n', normas)
-    print('Convergencia de los cocientes: \n', lambdas)
-    print('Convergencia de los vectores: \n', X)
-else:
-    print(normas)
-print('Deducimos que 3 es autovalor')
-Z2=array([[1],[0.5],[0],[0],[0]])
-print('El autovector asociado es ', Z2)
-
-print('---POTENCIA DESPLAZADA INVERSA---')
-
-exito,normas,lambdas,X=potenciadesinv(A,X0,-9,inf,200,1e-5)
-if exito:
-    print('Convergencia de las normas: \n', normas)
-    print('Convergencia de los cocientes: \n', lambdas)
-    print('Convergencia de los vectores: \n', X)
-else:
-    print(normas)
-    
-print('Deducimos que hay dos autovalores equidistantes de -9')
-
-# Usamos la traza para deducir el otro de autovalor
-tr=traza(A)
-print(tr)
-
-# 9=15+3-9+algo-9-algo+elquequeda -> 9=elquequeda
-# Usamos ahora el determinante para deducir el algo
-dt=det(A)
-print(dt)
-# 29160=9*15*3*(-9-algo)*(-9+algo)
-# 29160=9*15*3*(81-(algo)^2)
-# 29160=9*15*3*81-9*15*3*(algo)^2
-algo=sqrt((29160-9*15*3*81)/(-9*15*3))
-print(algo)
-
-print('Los autovalores son -12,-6,3,9,15')
-
-# AUTOVECTOR ASOCIADO A -12
-# AX=LAMBDAX -> (A+12*I)*X=0
-# def identidadmultiplicada(n,num):
-#     A=zeros((n,n))
-#     for i in range (n):
-#         for j in range (n):
-#             if i==j:
-#                 A[i,i]=num
-#     return A
-
-# id3=identidadmultiplicada(5, 6)
-# print (id3)
-
-# vector0=array([[0],[0],[0],[0],[0]])
-
-# Z3=gauss_1p(A+id3,vector0)
-# print(Z3)
-# TEOREMA DE GERSCHGORIN HADAMARD
-def GS(A):
-    n=shape(A)[0]
-    X=zeros((n,2))
-    for i in range (n):
-        suma=0
-        for j in range (n):
-            suma=suma+abs(A[i,j])
-        suma=suma-abs(A[i,i])
-        X[i,0]=A[i,i]-suma
-        X[i,1]=A[i,i]+suma
-    return X
-
-print(GS(A))
-
-print('Concluimos que el sp(A) C [-174,153]')
-
-print(eig(A)[1])
+# funciones a conocer
+# ndim(A) dimensiones de una matriz
+# shape(A) tamaño de una matriz (_,_)
+# size(A) numero de elementos de una matriz
+# zeros(n) matriz de ceros    (zeros([3,3]) matriz 3x3 de ceros
+# ones(n) matriz de unos
+# eye(n) matriz con diagonal 1, n es la dimension de la matriz
+# transpose(A) matriz transpuesta
+# tril(A) triangular inferior
+# tril(A) triangular superior
+# diag(A) vector de la diagonal
+# diagflat(A) matriz diagonal a partir de un vector
+# traza(A) traza o trace
+# svd(A), matriz U, valores singulares y matriz V
+#   

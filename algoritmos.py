@@ -4,19 +4,23 @@ from numpy import *
 from numpy.linalg import *
 from numpy import abs, sum, max, min
 
+
 def conjugada(A):
     return conjugate(transpose(A))
+
 
 def traza(A):
     return sum(diag(A))
 
 # función norma_vec(), norma de un vector, si p = "inf" norma infinito, si no, norma ...**1/p
+
+
 def norma_vec(X, p):
     XX = array(X, dtype=complex)
     normainf = max(abs(XX))
     if p == inf:
         return normainf
-    elif p>=1:
+    elif p >= 1:
         if normainf <= 1e-15:
             return sum(abs(XX)**p)**(1/p)
         else:
@@ -45,15 +49,15 @@ def conv_norma_vec(X):
         print("Convergencia numérica alcanzada.")
     else:
         print("Número máximo de iteraciones alcanzado.")
-        
-        
+
+
 # norma matricial
 def norma_mat(A, p):
     A = array(A, dtype=complex)
     if p == inf:
-        return  max(sum(abs(A),axis=1))
+        return max(sum(abs(A), axis=1))
     elif p == 1:
-        return  max(sum(abs(A),axis=0))
+        return max(sum(abs(A), axis=0))
     elif p == 2:
         return sqrt(max(abs(eig(conjugada(A)@A)[0])))
     elif p == 'esp':
@@ -62,20 +66,22 @@ def norma_mat(A, p):
         return sqrt(sum(abs(A)**2))
     else:
         return "Error norma_mat: valor de p."
-    
+
 # Ejercicio 5 pracitca 3
-def aprox_norma_mat(A,p,nva):
-    m,n=shape(A)
-    norma=0.
-    for i in range (nva):
-        X = random.rand(n,1)
-        aux=norma_vec(A@X,p) /norma_vec(X,p)
-        norma=max([norma,aux])
-    print("Norma matricial: ", norma_mat(A,p))
+
+def aprox_norma_mat(A, p, nva):
+    m, n = shape(A)
+    norma = 0.
+    for i in range(nva):
+        X = random.rand(n, 1)
+        aux = norma_vec(A@X, p) / norma_vec(X, p)
+        norma = max([norma, aux])
+    print("Norma matricial: ", norma_mat(A, p))
     print("Aproximación: ", norma)
-    
+
 # Definición de la función descenso()
 # Devuelve true si se ha conseguido la solucion, junto a la solución. False si no se ha conseguido la solución.
+
 
 def descenso(A, B):
     m, n = shape(A)
@@ -102,7 +108,7 @@ def descenso1(A, B):
     (p, q) = shape(B)
     if m != n or n != p or q < 1:
         return False, "descenso: error en las dimensiones"
-    #if min(abs(diag(A))) < 1e-100:
+    # if min(abs(diag(A))) < 1e-100:
     #    return False, "descenso: matriz singular"
     if A.dtype == complex or B.dtype == complex:
         X = zeros((n, q), dtype=complex)
@@ -112,7 +118,7 @@ def descenso1(A, B):
         X[i, :] = B[i, :]
         if i != 0:
             X[i, :] = X[i, :] - A[i, :i]@X[:i, :]
-        #X[i, :] = X[i, :]/A[i, i]
+        # X[i, :] = X[i, :]/A[i, i]
     return True, X
 
 
@@ -129,15 +135,17 @@ def remonte(A, B):
     else:
         X = zeros((n, q), dtype=float)
     for i in range(n):
-        for k in range (q): 
-            j=n-1-i
+        for k in range(q):
+            j = n-1-i
             X[j, k] = B[j, k]
             if i != k:
                 X[j, k] -= A[j, (j+1):n]@X[(j+1):n, k]
             X[j, k] = X[j, k]/A[j, j]
     return True, X
-    
+
 # Sólo se usa en el caso en que la diagonal sea todo 1
+
+
 def remonte1(A, B):
     m, n = shape(A)
     p, q = shape(B)
@@ -149,14 +157,15 @@ def remonte1(A, B):
         X = zeros((n, q), dtype=complex)
     else:
         X = zeros((n, q), dtype=float)
-    for i in range(n-1 , -1 ,-1): #Desde n-1 hasta 0 con salto -1  (ponemos -1 porque el -1 no está incluido, para en 0) 
+    # Desde n-1 hasta 0 con salto -1  (ponemos -1 porque el -1 no está incluido, para en 0)
+    for i in range(n-1, -1, -1):
         X[i, :] = B[i, :]
         if i != n-1:
             X[i, :] -= A[i, i+1:]@X[i+1:, :]
     return True, X
 
 
-# Función descenso_1diag() 
+# Función descenso_1diag()
 def descenso_1diag(A, B):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -176,6 +185,8 @@ def descenso_1diag(A, B):
     return True, X
 
 # Función remonte_1diag()
+
+
 def remonte_1diag(A, B):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -187,7 +198,7 @@ def remonte_1diag(A, B):
         X = zeros((n, q), dtype=complex)
     else:
         X = zeros((n, q), dtype=float)
-    for i in range(n-1,-1,-1):
+    for i in range(n-1, -1, -1):
         X[i, :] = B[i, :]
         if i != n-1:
             X[i, :] = X[i, :] - A[i, i+1:]@X[i+1:, :]
@@ -219,6 +230,34 @@ def gauss_pp(A, B):
                 gaussB[i, :] -= gaussA[i, k]*gaussB[k, :]
     exito, X = remonte(gaussA, gaussB)
     return exito, X
+
+
+#Si nos piden las matrices gaussA, gaussB (MA = triu(gaussA), MB = gaussB)
+def gauss_pp2(A, B):
+    m, n = shape(A)
+    p, q = shape(B)
+    if m != n or n != p or q < 1:
+        return False, "Error gauss_pp: error en las dimensiones."
+    if A.dtype == complex or B.dtype == complex:
+        gaussA = array(A, dtype=complex)
+        gaussB = array(B, dtype=complex)
+    else:
+        gaussA = array(A, dtype=float)
+        gaussB = array(B, dtype=float)
+    for k in range(n-1):
+        pos = argmax(abs(gaussA[k:, k]))
+        ik = pos+k
+        if ik != k:
+            gaussA[[ik, k], :] = gaussA[[k, ik], :]
+            gaussB[[ik, k], :] = gaussB[[k, ik], :]
+        if abs(gaussA[k, k]) >= 1e-200:
+            for i in range(k+1, n):
+                gaussA[i, k] = gaussA[i, k]/gaussA[k, k]
+                gaussA[i, k+1:] -= gaussA[i, k]*gaussA[k, k+1:]
+                gaussB[i, :] -= gaussA[i, k]*gaussB[k, :]
+    exito, X = remonte(gaussA, gaussB)
+    return gaussA, gaussB
+
 
 def gaussjordan_pp(A, B):
     (m, n) = shape(A)
@@ -257,6 +296,8 @@ def gaussjordan_pp(A, B):
     return True, X
 
 
+#Si nos piden las matrices gJA, gJB (MA = triu(gJA) - triu(gJA, k=1), MB = gJB
+# MA tabien se puede calcular como MA = diagflat(diag(gjA), gjB)
 def gaussjordan_pp2(A, B):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -293,6 +334,7 @@ def gaussjordan_pp2(A, B):
         X[i, :] = gjB[i, :]/gjA[i, i]
     return True, gjA, gjB
 
+
 def gauss_1p(A, B):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -318,6 +360,7 @@ def gauss_1p(A, B):
                 gaussB[i, :] = gaussB[i, :]-gaussA[i, k]*gaussB[k, :]
     exito, X = remonte(gaussA, gaussB)
     return exito, X
+
 
 def gaussjordan_1p(A, B):
     (m, n) = shape(A)
@@ -356,6 +399,15 @@ def gaussjordan_1p(A, B):
         X[i, :] = gjB[i, :]/gjA[i, i]
     return True, X
 
+
+# devuelve en una misma matriz la matriz L y la matriz U
+# La matriz L es la matriz triangular inferior con unos en la diagonal, U triangular superior
+
+# si queremos descomponer L y U
+# e, LU = facto_lu(A)
+# L = tril(LU, k = -1) + eye(n),        n dimensiones
+# U = triu(LU)
+
 def facto_lu(A):
     (m, n) = shape(A)
     if m != n:
@@ -385,8 +437,27 @@ def metodo_lu(A, B):
             return False, "metodo_lu: error en la resolución."
     else:
         return False, "metodo_lu: error en la factorización."
-    
 
+
+def admite_cholesky(A):
+    m, n = shape(A)
+    if m != n:
+        return False, "NO ADMITE CHOLESKY: no es matriz cuadrada"
+    if max(abs(A-transpose(A))) > 1e-10 :
+        return False, "NO ADMITE CHOLESKY: no es simétrica"      
+    determinante = A[0,0]
+    i = 2
+    while i<=n and determinante > 0:
+        M = A[0:i,0:i]
+        determinante = det(M)
+        i += 1
+    if i == n+1:
+           return True, "ADMITE CHOLESKY"
+    else:
+           return False, "NO ADMITE CHOLESKY: no es definida positiva"
+
+
+#para obtener la matriz hacer tril(chol)
 def facto_cholesky(A):
     (m, n) = shape(A)
     if m != n:
@@ -396,12 +467,12 @@ def facto_cholesky(A):
     else:
         chol = array(A, dtype=float)
     for i in range(n):
-        chol[i, i] = chol[i, i]-sum(power(abs(chol[i, 0:i]), 2)) 
+        chol[i, i] = chol[i, i]-sum(power(abs(chol[i, 0:i]), 2))
         if chol[i, i] >= 1e-15:
             chol[i, i] = sqrt(chol[i, i])
         else:
             return False, "facto_cholesky: no se factoriza la matriz"
-        chol[i, i+1:] = (chol[i, i+1:] - 
+        chol[i, i+1:] = (chol[i, i+1:] -
                          chol[i, 0:i]@conjugada(chol[i+1:, 0:i]))/chol[i, i]
         chol[i+1:, i] = conjugada(chol[i, i+1:])
     return True, chol
@@ -418,9 +489,18 @@ def metodo_cholesky(A, B):
             return False, "metodo_cholesky: error en la resolución."
     else:
         return False, "metodo_cholesky: error en la factorización."
-    
+
 # Matriz A,miembro B, vector X0 con el que iniciar las iteraciones
 # y el numero maximo de iteraciones que dar
+
+
+# A = M - N = D - (E + F) = D - E -F => J = (D^-1)(E+F)
+# Sacar la J:  A = M - N = D - (E + F) = D - E -F => J = (D^-1)(E+F)
+# D = A - tril(A, -1) - triu(A, 1)
+# E = tril(-A, -1)
+# F = triu(-A, 1)
+# Dinv = inv(D)
+# J = Dinv@(E+F)
 def jacobi(A, B, XOLD, itermax, tol):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -448,7 +528,8 @@ def jacobi(A, B, XOLD, itermax, tol):
     else:
         print('Convergencia numérica alcanzada: jacobi.')
         return True, XNEW
-    
+
+
 def gaussseidel(A, B, XOLD, itermax, tol):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -479,6 +560,7 @@ def gaussseidel(A, B, XOLD, itermax, tol):
 
 # omega es el omga de relajacion. Converge si ...
 
+
 def relajacion(A, B, XOLD, omega, itermax, tol):
     (m, n) = shape(A)
     (p, q) = shape(B)
@@ -507,7 +589,9 @@ def relajacion(A, B, XOLD, omega, itermax, tol):
     else:
         print('Convergencia numérica alcanzada: relajación.')
         return True, XNEW
-    
+
+
+# exito, normas, lambdas, X  = potencia(A, X0, inf, 200, 1e-8)
 def potencia(A, X, norma, itermax, tol):
     (m, n) = shape(A)
     (r, s) = shape(X)
@@ -528,16 +612,17 @@ def potencia(A, X, norma, itermax, tol):
             else:
                 lambdas[i] = 0.
         X = Y/normanew
-        #print('Iteración: k = ', k, 'Norma: ||A*X_k|| = ', normanew)
-        #print('Lambdas: lambdas_k = \n', lambdas)
-        #print('Vectores: X_k = \n', X)
+        #   
+        # print('Lambdas: lambdas_k = \n', lambdas)
+        # print('Vectores: X_k = \n', X)
         normaold = normanew
     if k == itermax and error >= tol:
         return False, 'ERROR potencia: no se alcanza convergencia.', 0, 0
     else:
         print('\n Potencia: convergencia numérica alcanzada.')
         return True, normanew, lambdas, X
-    
+
+
 def potenciainv(A, X, norma, itermax, tol):
     (m, n) = shape(A)
     (r, s) = shape(X)
@@ -564,9 +649,9 @@ def potenciainv(A, X, norma, itermax, tol):
             else:
                 lambdas[i] = 0.
         X = Y/normanew
-        #print('Iteración: k = ', k, 'Norma: ||A-1*X_k|| = ', normanew)
-        #print('Lambdas: lambdas_k = ', lambdas)
-        #print('Vectores: X_k = ', X)
+        # print('Iteración: k = ', k, 'Norma: ||A-1*X_k|| = ', normanew)
+        # print('Lambdas: lambdas_k = ', lambdas)
+        # print('Vectores: X_k = ', X)
         normaold = normanew
     if k == itermax and error >= tol:
         return False, 'ERROR potenciainv: no se alcanza convergencia.', 0, 0
@@ -574,42 +659,45 @@ def potenciainv(A, X, norma, itermax, tol):
         print('\n Potenciainv: convergencia numérica alcanzada.')
         return True, normanew, lambdas, X
 
-    
+
 def potenciades(A, X, des, norma, itermax, tol):
     (m, n) = shape(A)
     (r, s) = shape(X)
-    if m != n or n!= r or s != 1:
+    if m != n or n != r or s != 1:
         return False, 'ERROR potenciades: no se ejecuta el programa.'
     B = A-des*eye(n)
     exito, normanew, lambdas, X = potencia(B, X, norma, itermax, tol)
-    return exito, normanew, lambdas, X 
+    return exito, normanew, lambdas, X
+
 
 def potenciadesinv(A, X, des, norma, itermax, tol):
     (m, n) = shape(A)
     (r, s) = shape(X)
-    if m != n or n!= r or s != 1:
+    if m != n or n != r or s != 1:
         return False, 'ERROR potenciadesinv: no se ejecuta el programa.'
     B = A-des*eye(n)
     exito, normanew, lambdas, X = potenciainv(B, X, norma, itermax, tol)
     return exito, normanew, lambdas, X
+
 
 def Householder(X):
     den = conjugada(X)@X
     N = X@conjugada(X)
     fr = 2/den
     n = size(X)
-    H = eye(n,n) - fr * N
+    H = eye(n, n) - fr * N
     return H
 
 
 def matricesHouseholder(X):
     num = e**(angle(X[0])*1j)
     n = size(X)
-    A = X + norma_vec(X, 2)*num*eye(n,1)
-    B = X - norma_vec(X, 2)*num*eye(n,1)
+    A = X + norma_vec(X, 2)*num*eye(n, 1)
+    B = X - norma_vec(X, 2)*num*eye(n, 1)
     return Householder(A), Householder(B)
 
-def matrizTriangularGauss(A,B):
+
+def matrizTriangularGauss(A, B):
     m, n = shape(A)
     p, q = shape(B)
     if m != n or n != p or q < 1:
@@ -632,18 +720,34 @@ def matrizTriangularGauss(A,B):
                 gaussA[i, k+1:] -= gaussA[i, k]*gaussA[k, k+1:]
                 gaussB[i, :] -= gaussA[i, k]*gaussB[k, :]
     return triu(gaussA)
-    
-    
-    
-def cond(A,p):
+
+
+def cond(A, p):
     n, m = shape(A)
     if m != n:
         return "Error cond"
-    AA = array(A,dtype=complex)
+    AA = array(A, dtype=complex)
     if p == 1:
         return norma_mat(AA, 1)*norma_mat(inv(AA), 1)
     elif p == 2:
         return norma_mat(AA, 2)*norma_mat(inv(AA), 2)
     elif p == inf:
         return norma_mat(AA, inf)*norma_mat(inv(AA), inf)
-  
+
+
+
+# funciones a conocer
+# ndim(A) dimensiones de una matriz
+# shape(A) tamaño de una matriz (_,_)
+# size(A) numero de elementos de una matriz
+# zeros(n) matriz de ceros    (zeros([3,3]) matriz 3x3 de ceros
+# ones(n) matriz de unos
+# eye(n) matriz con diagonal 1, n es la dimension de la matriz
+# transpose(A) matriz transpuesta
+# tril(A) triangular inferior
+# tril(A) triangular superior
+# diag(A) vector de la diagonal
+# diagflat(A) matriz diagonal a partir de un vector
+# traza(A) traza o trace
+# svd(A), matriz U, valores singulares y matriz V
+#   
